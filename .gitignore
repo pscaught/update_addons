@@ -1,0 +1,5 @@
+*node_modules
+*_env
+*__pycache__*
+*.pyc
+*package-lock.json
