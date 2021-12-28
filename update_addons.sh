@@ -4,7 +4,7 @@ WINDOWS_HOME_PATH='/mnt/c/Users/scott'
 
 cd "${WINDOWS_HOME_PATH}/update_addons"
 source addon_env/bin/activate
-./update_addons_sylpc.py
+./update_addons.py
 deactivate
 
 echo "Updating ElvUI"
