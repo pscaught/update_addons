@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import requests
 import sys
+import time
 import yaml
 import zipfile
 
@@ -11,6 +12,7 @@ from datetime import date
 from lxml import html
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 
@@ -47,9 +49,15 @@ class Curse():
         self.curse_url = CURSE_URL
         self.curse_download_url = CURSE_DOWNLOAD_URL
 
+        self.caps = DesiredCapabilities().CHROME
+        self.caps['pageLoadStrategy'] = 'eager'
         self.chrome_options = Options()
+        self.chrome_options.add_argument('--window-size=1920,1080')
+        self.chrome_options.add_argument('--no-sandbox')
+        self.chrome_options.add_argument('--disable-gpu')
         self.chrome_options.set_capability('acceptInsecureCerts', True)
-        self.browser = webdriver.Chrome(options=self.chrome_options)
+        self.chrome_options.add_experimental_option('prefs', { 'download_restrictions': 3, })
+        self.browser = webdriver.Chrome(desired_capabilities=self.caps, options=self.chrome_options)
 
     def check_for_update(self):
         """Parse the html of the Curse website for the timestamp and special location reference number of the latest
@@ -131,7 +139,7 @@ class Curse():
         if None not in (self.file_update, self.location):
             checked_addon = Color.purple + self.addon_dir + Color.end_color
 
-            if not self.file_update > self.get_local_file_mtime():
+            if self.file_update > self.get_local_file_mtime():
                 action = Color.yellow + 'Downloading' + Color.end_color
                 self.download_addon()
             else:
@@ -140,16 +148,24 @@ class Curse():
         else:
             return
 
+def split(list_a, chunk_size):
+    for i in range(0, len(list_a), chunk_size):
+        yield list_a[i:i + chunk_size]
+
+
 def check_addon(a):
     c = Curse(a)
     c.do_stuff()
-    c.browser.close()
+    c.browser.quit()
 
 
 if __name__ == '__main__':
-    jobs = []
+    processes = []
     for addon in DATA['addons']:
-        p = multiprocessing.Process(target=check_addon, args=(addon,))
-        jobs.append(p)
+        processes.append(multiprocessing.Process(target=check_addon, args=(addon,)))
+    for p in processes:
         p.start()
+        time.sleep(0.5)
+    for p in processes:
+        p.join()
 
