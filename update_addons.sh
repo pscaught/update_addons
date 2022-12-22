@@ -2,6 +2,8 @@
 
 WINDOWS_HOME_PATH='/mnt/c/Users/scott'
 
+export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2; exit;}'):0.0
+
 cd "${WINDOWS_HOME_PATH}/update_addons"
 source addon_env/bin/activate
 ./update_addons.py

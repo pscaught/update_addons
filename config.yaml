@@ -5,6 +5,8 @@ addons:
   url: auctionator
 - dir: BigWigs
   url: big-wigs
+- dir: BigWigs_Voice
+  url: bigwigs_voice
 - dir: LittleWigs
   url: little-wigs
 - dir: Capping
@@ -31,7 +33,8 @@ addons:
   url: raiderio
 - dir: Rarity
   url: rarity
-- dir: Simulationcraft
+- dir: SharedMedia_Causese 
+  url: haredmedia_causese
   url: simulationcraft
 - dir: WeakAuras
   url: weakauras-2
@@ -41,4 +44,9 @@ addons:
   url: pawn
 - dir: ArkInventory
   url: ark-inventory
+- dir: HandyNotes_DragonGlyphs
+  url: handynotes-dragon-glyphs
+- dir: BigWigs_Shadowlands
+  url: bigwigs_shadowlands
+
 addons_dir: /mnt/c/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns
