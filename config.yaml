@@ -1,52 +1,95 @@
 addons:
+- dir: ArkInventory
+  project_id: '3651'
+  url: ark-inventory
 - dir: AstralKeys
+  project_id: '265199'
   url: astral-keys
 - dir: Auctionator
+  project_id: '6124'
   url: auctionator
 - dir: BigWigs
+  project_id: '2382'
   url: big-wigs
+- dir: BigWigs_Legion
+  project_id: '300657'
+  url: bigwigs_legion
+- dir: BigWigs_MistsOfPandaria
+  project_id: '86782'
+  url: bigwigs_mistsofpandaria
+- dir: BigWigs_Shadowlands
+  project_id: '714747'
+  url: bigwigs_shadowlands
 - dir: BigWigs_Voice
+  project_id: '87513'
   url: bigwigs_voice
-- dir: LittleWigs
-  url: little-wigs
 - dir: Capping
+  project_id: '20143'
   url: capping-bg-timers
 - dir: CovenantMissionHelper
+  project_id: '434671'
   url: covenantmissionhelper
 - dir: Details
+  project_id: '61284'
   url: details
-- dir: Healers-Have-To-Die
-  url: h-h-t-d
+- dir: EditModeExpanded
+  project_id: '695703'
+  url: edit-mode-expanded
+- dir: Gnosis
+  project_id: '20555'
+  url: gnosis
+- dir: GTFO
+  project_id: '20697'
+  url: gtfo
 - dir: HandyNotes
+  project_id: '14154'
   url: handynotes
+- dir: HandyNotes_DragonGlyphs
+  project_id: '667897'
+  url: handynotes-dragon-glyphs
+- dir: Healers-Have-To-Die
+  project_id: '19474'
+  url: h-h-t-d
+- dir: LittleWigs
+  project_id: '4383'
+  url: little-wigs
 - dir: MaxCam
+  project_id: '101438'
   url: maxcam
 - dir: Overachiever
+  project_id: '15809'
   url: overachiever
+- dir: Pawn
+  project_id: '4646'
+  url: pawn
 - dir: PersonalLootHelper
+  project_id: '102044'
   url: personal-loot-helper
 - dir: Postal
+  project_id: '14502'
   url: postal
 - dir: Prat-3.0
+  project_id: '7473'
   url: prat-3-0
 - dir: RaiderIO
+  project_id: '279257'
   url: raiderio
 - dir: Rarity
+  project_id: '30801'
   url: rarity
-- dir: SharedMedia_Causese 
-  url: haredmedia_causese
+- dir: RSA
+  project_id: '21464'
+  url: rsa
+- dir: SharedMedia_Causese
+  project_id: '301812'
+  url: sharedmedia_causese
+- dir: Simulationcraft
+  project_id: '82745'
   url: simulationcraft
 - dir: WeakAuras
+  project_id: '65387'
   url: weakauras-2
 - dir: WorldQuestTracker
+  project_id: '100610'
   url: world-quest-tracker
-- dir: Pawn
-  url: pawn
-- dir: ArkInventory
-  url: ark-inventory
-- dir: HandyNotes_DragonGlyphs
-  url: handynotes-dragon-glyphs
-- dir: BigWigs_Shadowlands
-  url: bigwigs_shadowlands
-
-addons_dir: /mnt/c/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns
+addons_dir: /Applications/World of Warcraft/_retail_/Interface/AddOns
