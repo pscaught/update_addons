@@ -14,10 +14,9 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-CURSE_URL = "https://www.curseforge.com/wow/addons/"
+CURSE_URL = "https://www.curseforge.com"
+CURSE_ADDON_URL = f"{CURSE_URL}/wow/addons/"
 CURSE_DOWNLOAD_URL = "https://media.forgecdn.net/files/"
-CURSEFORGE_PROJECT_URL = "https://wow.curseforge.com/projects/"
-WOWACE_PROJECT_URL = "https://www.wowace.com/projects"
 CONFIG_FILE = "config.yaml"
 
 # Open local yaml config
@@ -29,13 +28,13 @@ ADDONS_DIR = DATA["addons_dir"] + "/"
 # Colors!
 class Color:
     purple = "\033[95m"
-    blue = "\033[94m"
+    # blue = "\033[94m"
     green = "\033[92m"
     yellow = "\033[93m"
     red = "\033[91m"
     end_color = "\033[0m"
-    bold = "\033[1m"
-    underline = "\033[4m"
+    # bold = "\033[1m"
+    # underline = "\033[4m"
 
 
 class CurseBrowser:
@@ -47,7 +46,7 @@ class CurseBrowser:
         self.addon_url = self.addon["url"]
         self.dir = self.addon["dir"]
         self.project_id = self.addon.get("project_id")
-        self.curse_url = CURSE_URL
+        self.curse_addon_url = CURSE_ADDON_URL
         self.chrome_active = False
 
     def _chrome_setup(self):
@@ -74,7 +73,7 @@ class CurseBrowser:
         self.browser = webdriver.Chrome(
             desired_capabilities=self.caps, options=self.chrome_options
         )
-        self.url = f"{self.curse_url}{self.addon_url}"
+        self.url = f"{self.curse_addon_url}{self.addon_url}"
         self.browser.get(self.url)
         self.chrome_active = True
 
@@ -94,7 +93,7 @@ class CurseBrowser:
             self._chrome_setup()
 
         # Begin recursive retry loop, bail after 30 attempts
-        if retry < 30:
+        if retry < 10:
             try:
                 return (
                     html.fromstring(self.browser.page_source)
@@ -109,13 +108,13 @@ class CurseBrowser:
                     self.browser.execute_script(f"window.open('{self.url}');")
                 time.sleep(1)
                 retry += 1
-                self.check_for_update(retry)
+                self.get_project_id(retry)
                 return None
         else:
             print(
-                Color.red,
-                "Error fetching webpage data for {}.".format(self.addon_url),
-                Color.end_color,
+                Color.red
+                + f"Error fetching webpage data for {self.addon_url}"
+                + Color.end_color
             )
             return None
 
@@ -128,6 +127,7 @@ class Curse:
         self.data = DATA
         self.addon = addon
         self.addon_url = self.addon["url"]
+        self.curse_url = CURSE_URL
         self.dir = self.addon["dir"]
         self.project_id = self.addon["project_id"]
         self.addons_dir = ADDONS_DIR
@@ -135,7 +135,18 @@ class Curse:
 
     def get_data(self):
         """Get modified time, filename, and file ID for latest addon available."""
-        api_url = f"https://www.curseforge.com/api/v1/mods/{self.project_id}/files?pageSize=20&sort=dateCreated&sortDescending=true&removeAlphas=true&gameVersion=517"
+        self.mtime = None
+        self.filename = None
+        self.id = None
+
+        api_url = (
+            f"{self.curse_url}/api/v1/mods/{self.project_id}/files"
+            + "?pageSize=20"
+            + "&sort=dateCreated"
+            + "&sortDescending=true"
+            + "&removeAlphas=true"
+            + "&gameVersion=517"
+        )
         r = requests.get(api_url)
         if r.status_code == 200:
             data = r.json()["data"]
@@ -160,7 +171,9 @@ class Curse:
             self.id = str(latest_release["id"])
 
         else:
-            print("ERROR getting data")
+            print(
+                Color.red + f"Error getting data for {self.addon_url}" + Color.end_color
+            )
 
     def get_local_file_mtime(self):
         """Get mtime info for local addon file"""
@@ -209,7 +222,7 @@ class Curse:
         """Compare whether the addon on Curse is more recent than the local one.
         Trigger a download and install if necessary."""
         self.get_data()
-        if None not in (self.mtime, self.id):
+        if None not in (self.filename, self.mtime, self.id):
             self.checked_addon = Color.purple + self.dir + Color.end_color
             if self.mtime > self.get_local_file_mtime():
                 self.action = Color.yellow + "Downloading" + Color.end_color
@@ -228,11 +241,8 @@ class Curse:
 
 def check_addon(a):
     """Main function executed by multiprocessing"""
-    if a["dir"] and a["url"] and a["project_id"]:
-        c = Curse(a)
-        c.do_stuff()
-    else:
-        print("ERROR: Missing data in config file.")
+    c = Curse(a)
+    c.do_stuff()
 
 
 if __name__ == "__main__":
@@ -242,15 +252,33 @@ if __name__ == "__main__":
     for i, addon in enumerate(DATA["addons"]):
         # Original versions of the script didn't require project_id to be in
         # the config file, so we have some helper logic to retrieve and write it
-        if not addon.get("project_id"):
+        _dir = addon.get("dir", "missing")
+        _url = addon.get("url", "missing")
+        _project_id = addon.get("project_id")
+
+        if "missing" in (_dir, _url):
+            print(
+                Color.red
+                + "ERROR: Missing data in config file."
+                + "\n"
+                + f"dir: {_dir}"
+                + "\n"
+                + f"url: {_url}"
+                + Color.end_color
+            )
+            del DATA["addons"][i]
+            continue
+        if not _project_id:
             c = CurseBrowser(addon)
-            write_data = True
             project_id = c.get_project_id()
             c.browser.quit()
             if project_id:
                 DATA["addons"][i]["project_id"] = project_id
+                write_data = True
             else:
-                print("Error getting project_id")
+                print(Color.red + f"Error getting project_id for {_url}")
+                del DATA["addons"][i]
+                continue
     if write_data:
         with open(CONFIG_FILE, "w") as addon_file:
             yaml.dump(DATA, addon_file, default_flow_style=False, sort_keys=True)
