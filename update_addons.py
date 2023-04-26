@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+import copy
 import datetime
+import difflib
 import os
 import multiprocessing
 import pytz
@@ -20,9 +22,10 @@ CURSE_DOWNLOAD_URL = "https://media.forgecdn.net/files/"
 CONFIG_FILE = "config.yaml"
 
 # Open local yaml config
-with open(CONFIG_FILE) as addon_file:
-    DATA = yaml.safe_load(addon_file)
-ADDONS_DIR = DATA["addons_dir"] + "/"
+with open(CONFIG_FILE) as f:
+    FILE_DATA = yaml.safe_load(f)
+ADDONS = FILE_DATA["addons"]
+ADDONS_DIR = FILE_DATA["addons_dir"] + "/"
 
 
 # Colors!
@@ -41,7 +44,6 @@ class CurseBrowser:
     """Open a Selenium browser designed to load the Curse webpage."""
 
     def __init__(self, addon):
-        self.data = DATA
         self.addon = addon
         self.addon_url = self.addon["url"]
         self.dir = self.addon["dir"]
@@ -124,7 +126,6 @@ class Curse:
     operations"""
 
     def __init__(self, addon):
-        self.data = DATA
         self.addon = addon
         self.addon_url = self.addon["url"]
         self.curse_url = CURSE_URL
@@ -138,6 +139,11 @@ class Curse:
         self.mtime = None
         self.filename = None
         self.id = None
+        latest_release = None
+
+        data_error = (
+                Color.red + f"Error getting data for {self.addon_url}" + Color.end_color
+            )
 
         api_url = (
             f"{self.curse_url}/api/v1/mods/{self.project_id}/files"
@@ -154,6 +160,9 @@ class Curse:
                 if d["releaseType"] == 1 and 517 in d["gameVersionTypeIds"]:
                     latest_release = d
                     break
+            if not latest_release:
+                print(data_error)
+                return
             # Create a timezone object for UTC
             utc_timezone = pytz.timezone("UTC")
 
@@ -171,9 +180,8 @@ class Curse:
             self.id = str(latest_release["id"])
 
         else:
-            print(
-                Color.red + f"Error getting data for {self.addon_url}" + Color.end_color
-            )
+            print(data_error)
+            return
 
     def get_local_file_mtime(self):
         """Get mtime info for local addon file"""
@@ -183,7 +191,7 @@ class Curse:
                 "%Y%m%d%H%M%S"
             )
         except FileNotFoundError:
-            return "0"
+            return 0
 
     def download_addon(self):
         """Multi-step process to figure out the file name.
@@ -247,11 +255,13 @@ def check_addon(a):
 
 if __name__ == "__main__":
     write_data = False
+    addons = copy.deepcopy(ADDONS)
 
     # Iterate through the config file
-    for i, addon in enumerate(DATA["addons"]):
+    for i in range(len(addons) - 1, -1, -1):
         # Original versions of the script didn't require project_id to be in
         # the config file, so we have some helper logic to retrieve and write it
+        addon = addons[i]
         _dir = addon.get("dir", "missing")
         _url = addon.get("url", "missing")
         _project_id = addon.get("project_id")
@@ -266,25 +276,52 @@ if __name__ == "__main__":
                 + f"url: {_url}"
                 + Color.end_color
             )
-            del DATA["addons"][i]
+            del addons[i]
             continue
+
         if not _project_id:
             c = CurseBrowser(addon)
             project_id = c.get_project_id()
             c.browser.quit()
             if project_id:
-                DATA["addons"][i]["project_id"] = project_id
+                addons[i]["project_id"] = project_id
                 write_data = True
             else:
-                print(Color.red + f"Error getting project_id for {_url}")
-                del DATA["addons"][i]
+                print(
+                    Color.red + f"Error getting project_id for {_url}" + Color.end_color
+                )
+                del addons[i]
                 continue
     if write_data:
-        with open(CONFIG_FILE, "w") as addon_file:
-            yaml.dump(DATA, addon_file, default_flow_style=False, sort_keys=True)
+        # Compare the before and after of the file contents
+        yaml1 = yaml.dump(ADDONS).splitlines()
+        yaml2 = yaml.dump(addons).splitlines()
+
+        differ = difflib.context_diff(
+            yaml1, yaml2, lineterm="", fromfile="Before", tofile="After"
+        )
+        diff = "\n".join(
+            Color.green + f"{line}" + Color.end_color
+            if line.startswith("+ ")
+            else Color.red + f"{line}" + Color.end_color
+            if line.startswith("- ")
+            else line
+            for line in differ
+            if line.strip()
+        )
+        print("Changes have been made to the configuration data. Please review them below.")
+        print(diff)
+        answer = input("Write changes to config file? (yes/no): ")
+        if answer.lower().startswith('y'):
+            FILE_DATA["addons"] = addons
+            with open(CONFIG_FILE, "w") as f:
+                yaml.dump(FILE_DATA, f, default_flow_style=False, sort_keys=True)
+            print("Changes written to config file.")
+        else:
+            print("Changes not written to config file.")
 
     processes = []
-    for addon in DATA["addons"]:
-        processes.append(multiprocessing.Process(target=check_addon, args=(addon,)))
+    for addon in addons:
+       processes.append(multiprocessing.Process(target=check_addon, args=(addon,)))
     for p in processes:
-        p.start()
+       p.start()

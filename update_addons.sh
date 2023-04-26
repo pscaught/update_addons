@@ -6,13 +6,14 @@
 #
 #cd "${WINDOWS_HOME_PATH}/update_addons"
 
-VENV=addon_env
+DIR=$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P )
+VENV="${DIR}/addon_env"
 
 if source "${VENV}/bin/activate"; then
-    time ./update_addons.py
+    time "${DIR}/update_addons.py"
     deactivate
 else
-    echo "ERROR: Missing Python Virtual Environment ${VENV}"
+    echo "ERROR: Missing Python Virtual Environment: ${VENV}"
 fi
 
 #echo "Updating ElvUI"
