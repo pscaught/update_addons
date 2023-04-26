@@ -142,8 +142,8 @@ class Curse:
         latest_release = None
 
         data_error = (
-                Color.red + f"Error getting data for {self.addon_url}" + Color.end_color
-            )
+            Color.red + f"Error getting data for {self.addon_url}" + Color.end_color
+        )
 
         api_url = (
             f"{self.curse_url}/api/v1/mods/{self.project_id}/files"
@@ -309,10 +309,12 @@ if __name__ == "__main__":
             for line in differ
             if line.strip()
         )
-        print("Changes have been made to the configuration data. Please review them below.")
+        print(
+            "Changes have been made to the configuration data. Please review them below."
+        )
         print(diff)
         answer = input("Write changes to config file? (yes/no): ")
-        if answer.lower().startswith('y'):
+        if answer.lower().startswith("y"):
             FILE_DATA["addons"] = addons
             with open(CONFIG_FILE, "w") as f:
                 yaml.dump(FILE_DATA, f, default_flow_style=False, sort_keys=True)
@@ -322,6 +324,6 @@ if __name__ == "__main__":
 
     processes = []
     for addon in addons:
-       processes.append(multiprocessing.Process(target=check_addon, args=(addon,)))
+        processes.append(multiprocessing.Process(target=check_addon, args=(addon,)))
     for p in processes:
-       p.start()
+        p.start()
