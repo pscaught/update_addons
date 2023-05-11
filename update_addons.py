@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import copy
-import datetime
 import difflib
 import os
 import multiprocessing
@@ -11,6 +10,7 @@ import time
 import yaml
 import zipfile
 
+from datetime import datetime
 from lxml import html
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -168,8 +168,8 @@ class Curse:
 
             # Create a timezone object for PST
             pst_timezone = pytz.timezone("US/Pacific")
-            mtime_obj = datetime.datetime.strptime(
-                latest_release["dateCreated"], "%Y-%m-%dT%H:%M:%S.%fZ"
+            mtime_obj = datetime.strptime(
+                latest_release["dateCreated"][:18], "%Y-%m-%dT%H:%M:%S"
             )
             pst_mtime_obj = mtime_obj.replace(tzinfo=utc_timezone).astimezone(
                 pst_timezone
@@ -187,7 +187,7 @@ class Curse:
         """Get mtime info for local addon file"""
         try:
             local_file_mtime = os.path.getmtime(self.addons_dir + self.dir)
-            return datetime.datetime.fromtimestamp(local_file_mtime).strftime(
+            return datetime.fromtimestamp(local_file_mtime).strftime(
                 "%Y%m%d%H%M%S"
             )
         except FileNotFoundError:
