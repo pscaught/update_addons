@@ -138,7 +138,7 @@ class Curse:
         """Get modified time, filename, and file ID for latest addon available."""
         self.mtime = None
         self.filename = None
-        self.id = None
+        self.file_id = None
         latest_release = None
 
         data_error = (
@@ -153,6 +153,7 @@ class Curse:
             + "&removeAlphas=true"
             + "&gameVersion=517"
         )
+        #print(api_url)
         r = requests.get(api_url)
         if r.status_code == 200:
             data = r.json()["data"]
@@ -177,7 +178,8 @@ class Curse:
 
             self.mtime = pst_mtime_obj.strftime("%Y%m%d%H%M%S")
             self.filename = latest_release["fileName"]
-            self.id = str(latest_release["id"])
+            self.file_id = str(latest_release["id"])
+            #print(self.filename, self.file_id)
 
         else:
             print(data_error)
@@ -195,21 +197,23 @@ class Curse:
 
     def download_addon(self):
         """Multi-step process to figure out the file name.
-        Step 2) Using self.id we may build our actual download url (direct
+        Step 2) Using self.file_id we may build our actual download url (direct
             link to the file), and finally download the addon.
         Step 3) Addon file will be a .zip, so we unzip the file directly into
             the ADDONS_DIR
         """
 
-        if len(self.id) == 6:
-            location_1 = self.id[:3]
-            location_2 = self.id[3:].lstrip("0")
+        if len(self.file_id) == 6:
+            file_id1 = self.file_id[:3]
+            file_id2 = self.file_id[3:].lstrip("0")
         else:
-            location_1 = self.id[:4]
-            location_2 = self.id[4:].lstrip("0")
+            file_id1 = self.file_id[:4]
+            file_id2 = self.file_id[4:].lstrip("0")
+            if file_id2 == "":
+                file_id2 = 0
 
         download_url = "{}{}/{}/{}".format(
-            self.curse_download_url, location_1, location_2, self.filename
+            self.curse_download_url, file_id1, file_id2, self.filename
         )
         r = requests.get(download_url, stream=True)
         with open("/tmp/" + self.filename, "wb") as f:
@@ -217,7 +221,7 @@ class Curse:
                 if chunk:
                     f.write(chunk)
 
-        # print(download_url)
+        #print(download_url)
         zip_ref = zipfile.ZipFile("/tmp/" + self.filename, "r")
         zip_ref.extractall(self.addons_dir)
         zip_ref.close()
@@ -230,8 +234,9 @@ class Curse:
         """Compare whether the addon on Curse is more recent than the local one.
         Trigger a download and install if necessary."""
         self.get_data()
-        if None not in (self.filename, self.mtime, self.id):
+        if None not in (self.filename, self.mtime, self.file_id):
             self.checked_addon = Color.purple + self.dir + Color.end_color
+            #print(self.mtime, self.get_local_file_mtime())
             if self.mtime > self.get_local_file_mtime():
                 self.action = Color.yellow + "Downloading" + Color.end_color
                 self.print_action()
