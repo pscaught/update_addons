@@ -18,7 +18,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 CURSE_URL = "https://www.curseforge.com"
 CURSE_ADDON_URL = f"{CURSE_URL}/wow/addons/"
-CURSE_DOWNLOAD_URL = "https://media.forgecdn.net/files/"
+CURSE_DOWNLOAD_URL = "https://mediafilez.forgecdn.net/files/"
 CONFIG_FILE = "config.yaml"
 
 # Open local yaml config
@@ -222,6 +222,7 @@ class Curse:
                     f.write(chunk)
 
         #print(download_url)
+        #print(self.filename)
         zip_ref = zipfile.ZipFile("/tmp/" + self.filename, "r")
         zip_ref.extractall(self.addons_dir)
         zip_ref.close()
